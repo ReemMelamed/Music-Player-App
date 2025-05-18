@@ -12,9 +12,8 @@ from PyQt6.QtWidgets import (
 
 SONGS_DIR = os.path.join(os.path.dirname(__file__), "songs")
 
-
+# QSlider subclass that allows seeking by clicking anywhere on the slider
 class ClickableSlider(QSlider):
-    """QSlider subclass that allows seeking by clicking anywhere on the slider."""
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
             x = event.position().x()
@@ -67,7 +66,6 @@ class MusicPlayer(QWidget):
         self.load_songs()
 
     def _setup_shortcuts(self):
-        """Setup keyboard shortcuts."""
         QShortcut(QKeySequence("Space"), self, self.toggle_play_pause)
         QShortcut(QKeySequence("S"), self, self.toggle_play_pause)
         QShortcut(QKeySequence("Right"), self, self.next_song)
@@ -81,7 +79,6 @@ class MusicPlayer(QWidget):
         QShortcut(QKeySequence("H"), self, self.show_shortcuts_help)
 
     def _setup_ui(self):
-        """Setup the main UI layout and widgets."""
         splitter = QSplitter(Qt.Orientation.Horizontal)
         splitter.setHandleWidth(8)
 
@@ -273,14 +270,13 @@ class MusicPlayer(QWidget):
         main_layout.addWidget(content, 1)
 
     def toggle_theme_icon(self):
-        """Changes the theme button icon between moon and sun, does nothing else."""
         if self.theme_btn.text() == "🌙":
             self.theme_btn.setText("☀️")
         else:
             self.theme_btn.setText("🌙")
 
+    # Loads all mp3 songs from the songs directory
     def load_songs(self):
-        """Loads all mp3 songs from the songs directory."""
         self.song_list.clear()
         if not os.path.exists(SONGS_DIR):
             os.makedirs(SONGS_DIR)
@@ -298,8 +294,8 @@ class MusicPlayer(QWidget):
             item.setFont(font)
             self.song_list.addItem(item)
 
+    # Filters the song list by search text
     def filter_songs(self, text=""):
-        """Filters the song list by search text."""
         self.song_list.clear()
         for i, song in enumerate(self.songs):
             if text.lower() in song.lower():
@@ -308,14 +304,12 @@ class MusicPlayer(QWidget):
                 self.song_list.addItem(item)
 
     def song_double_clicked(self, item):
-        """Plays song on double click from the list."""
         idx = item.data(Qt.ItemDataRole.UserRole)
         if idx is None:
             idx = self.song_list.row(item)
         self.start_song(idx)
 
     def start_song(self, idx):
-        """Starts playing the song at the given index."""
         if not self.songs:
             return
         self.current_song_index = idx
@@ -340,7 +334,6 @@ class MusicPlayer(QWidget):
         self.play_pause_btn.setText("⏸")
 
     def toggle_play_pause(self):
-        """Toggles between play and pause."""
         if self.player.is_playing():
             self.player.pause()
             self.is_paused = True
@@ -353,7 +346,6 @@ class MusicPlayer(QWidget):
             self.start_song(self.current_song_index)
 
     def next_song(self):
-        """Plays the next song, with repeat and shuffle logic."""
         if not self.songs:
             return
         if self.repeat_mode == "once":
@@ -376,7 +368,6 @@ class MusicPlayer(QWidget):
             self.start_song(self.current_song_index)
 
     def prev_song(self):
-        """Plays the previous song, with shuffle logic."""
         if not self.songs:
             return
         if self.shuffle:
@@ -386,7 +377,6 @@ class MusicPlayer(QWidget):
         self.start_song(self.current_song_index)
 
     def toggle_repeat(self):
-        """Toggles repeat mode: none → once → always."""
         if self.repeat_mode == "none":
             self.repeat_mode = "once"
             self.repeat_btn.setText("🔁1")
@@ -415,7 +405,6 @@ class MusicPlayer(QWidget):
             )
 
     def toggle_shuffle(self):
-        """Toggles shuffle mode."""
         self.shuffle = not self.shuffle
         if self.shuffle:
             self.shuffle_btn.setStyleSheet(
@@ -432,15 +421,15 @@ class MusicPlayer(QWidget):
                 .replace("border: 2px solid #00BFFF;", "")
             )
 
+    # Seeks to a specific position in the song
     def seek_song(self, value):
-        """Seeks to a specific position in the song."""
         try:
             self.player.set_time(int(float(value) * 1000))
         except Exception:
             pass
 
+    # Helper function to format seconds as mm:ss
     def format_time(self, seconds):
-        """Helper function to format seconds as mm:ss."""
         if seconds is None or seconds < 0:
             return "0:00"
         m = int(seconds) // 60
@@ -448,7 +437,6 @@ class MusicPlayer(QWidget):
         return f"{m}:{s:02d}"
 
     def update_ui(self):
-        """Updates UI elements like slider and play/pause button."""
         if self.player.is_playing() or self.is_paused:
             try:
                 length = self.player.get_length() // 1000
@@ -472,7 +460,6 @@ class MusicPlayer(QWidget):
             self.play_pause_btn.setText("⏸")
 
     def show_shortcuts_help(self):
-        """Shows a dialog with all keyboard shortcuts."""
         msg = QMessageBox(self)
         msg.setWindowTitle("קיצורי מקלדת")
         msg.setText(
