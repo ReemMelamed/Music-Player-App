@@ -1,118 +1,122 @@
-# Music-Player-App
+# Music-Player-App 🎵
 
-Welcome to your new favorite desktop music player!  
-This app was built with Python, PyQt6, and VLC to give you a simple, beautiful, and modern way to play your local MP3 files.  
-Enjoy features like shuffle, repeat (once or always), and a responsive interface.
-
----
-
-## Features
-
-- Play, pause, skip, and go back with easy controls
-- Shuffle and repeat modes (none, once, always)
-- Click or drag anywhere on the seek bar to jump in the song
-- Clean, modern interface (supports Hebrew and English)
-- Automatically loads all your songs from a folder
-- 100% offline
-
+A modern, simple desktop music player built with Python, PyQt6, and VLC.  
+Play your local MP3 files with a responsive interface, Hebrew support, search, shuffle, repeat, and keyboard shortcuts.
 
 ---
 
 ## Requirements
 
-- Python 3.8+
+- Python 3.8 or newer
 - [VLC Media Player](https://www.videolan.org/vlc/) (must be installed on your system)
 - Python packages: `PyQt6`, `python-vlc`
 
 ---
 
-## Installation
+## Quick Start Guide
 
-1. **Download or clone this repository**
+### 1. Download or Clone the Project
 
-2. **(Recommended) Create a virtual environment:**
-   ```sh
-   python -m venv venv
-   ```
-   Activate it:
-   - On Windows:
-     ```sh
-     .\venv\Scripts\activate
-     ```
-   - On Mac/Linux:
-     ```sh
-     source venv/bin/activate
-     ```
+```sh
+git clone https://github.com/yourusername/Music-Player-App-1.git
+cd Music-Player-App-1
+```
 
-3. **Install the required Python packages:**
-   ```sh
-   pip install PyQt6 python-vlc
-   ```
+### 2. (Recommended) Create a Virtual Environment
 
-4. **Install VLC media player:**
-   - Download and install from [https://www.videolan.org/vlc/](https://www.videolan.org/vlc/)
-   - Make sure VLC is in your system PATH, or that `libvlc` is accessible.
+```sh
+python -m venv venv
+```
+Activate the environment:
+- **Windows:**
+  ```sh
+  .\venv\Scripts\activate
+  ```
+- **Mac/Linux:**
+  ```sh
+  source venv/bin/activate
+  ```
+
+### 3. Install Python Dependencies
+
+```sh
+pip install PyQt6 python-vlc
+```
+
+### 4. Install VLC Media Player
+
+- Download and install from [https://www.videolan.org/vlc/](https://www.videolan.org/vlc/)
+- Make sure VLC is accessible from your system (usually automatic).
+
+### 5. Add Your Music
+
+- Place your `.mp3` files in the `songs` folder inside the project directory.
+- If the folder does not exist, create it manually.
+
+### 6. Run the Music Player
+
+```sh
+python main.py
+```
 
 ---
 
+## How to Use
 
-## How to use
-
-1. **Add your MP3 files** to the `songs` folder in the project directory.  
-   (Create the folder if it doesn't exist.)
-
-2. **Run the application:**
-   ```sh
-   python main.py
-   ```
-
-3. **How to use:**
-   - The app will display all MP3 files from the `songs` folder.
-   - Double-click a song to play it.
-   - Use the control buttons for play/pause, next, previous, shuffle, and repeat.
-   - Click or drag on the seek bar to jump to any point in the song.
-   - Shuffle and repeat buttons change color and icon to indicate their state.
+- All `.mp3` files in the `songs` folder will appear in the song list.
+- Double-click a song to play it.
+- Use the control buttons for play/pause, next, previous, repeat, and shuffle.
+- Click or drag on the seek bar to jump to any point in the song.
+- Use the search bar to filter songs by name.
+- The interface supports both Hebrew and English.
 
 ---
 
-## Project structure
+## Keyboard Shortcuts
+
+| Action                | Shortcut         |
+|-----------------------|-----------------|
+| Play/Pause            | Space / S       |
+| Next Song             | → / D           |
+| Previous Song         | ← / A           |
+| Repeat Mode           | ↑ / W           |
+| Shuffle Mode          | ↓               |
+| Focus Search Bar      | F               |
+| Show Shortcuts Help   | H               |
+
+---
+
+## Project Structure
 
 ```
-music-player-app/
+Music-Player-App-1/
 ├── main.py         # Main application file
-├── songs/          # Folder for your MP3 files
+├── songs/          # Place your MP3 files here
 │   └── (your mp3 files)
 ├── README.md
 ```
 
 ---
 
-## Notes and tips
-
-- The app only plays `.mp3` files from the `songs` folder.
-- You can add or remove songs at any time (restart the app to refresh the list).
-- The interface is fully responsive and supports both Hebrew and English song names.
-- Requires VLC to be installed for audio playback.
-
----
-
 ## Troubleshooting
 
-- **VLC not found:**  
-  Make sure VLC is installed and accessible. On Windows, the installer usually adds VLC to your PATH. If not, add the VLC installation directory (e.g., `C:\Program Files\VideoLAN\VLC`) to your PATH environment variable.
 - **No songs appear:**  
-  Make sure your MP3 files are in the `songs` folder and have the `.mp3` extension.
+  Make sure your `.mp3` files are in the `songs` folder and have the correct extension.
+
+- **VLC not found:**  
+  Ensure VLC is installed and accessible. On Windows, the installer usually adds VLC to your PATH automatically.
+
 - **Other issues:**  
-  Make sure all dependencies are installed and you are using a supported version of Python.
+  Make sure all dependencies are installed and you are using a supported Python version.
 
 ---
 
 ## License
 
-This project is provided for personal use only.
+This project is for personal use only.
 
 ---
 
 ## Contributing
 
-Ideas, suggestions, and pull requests are always welcome!
+Ideas, suggestions, and pull requests are welcome!
