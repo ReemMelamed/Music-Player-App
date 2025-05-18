@@ -107,11 +107,32 @@ python main.py
 
 ```
 Music-Player-App-1/
-├── main.py         # Main application file
-├── songs/          # Place your MP3 files here
-│   └── (your mp3 files)
+├── main.py                # Main application file
+├── favorites.txt          # User favorites (JSON)
 ├── README.md
+├── songs/                 # Place your MP3 files here
+│   └── (your mp3 files)
+├── core/                  # Core logic (no UI)
+│   ├── favorites_manager.py
+│   ├── favorites.txt
+│   ├── utils.py
+│   └── vlc_controller.py
+├── widgets/               # All UI components
+│   ├── controls.py        # Control buttons (play, pause, etc.)
+│   ├── sidebar.py         # Sidebar (song list, search)
+│   ├── slider.py          # ClickableSlider widget
+│   └── player/            # Main player logic and UI
+│       ├── __init__.py
+│       ├── main_player.py # MusicPlayer class (main logic/UI)
+│       ├── events.py      # (optional) Event handling (if used)
+│       ├── state.py       # (optional) State management (if used)
+│       └── ui.py          # (optional) UI helpers (if used)
 ```
+
+- All UI code is under `widgets/` (modularized by component).
+- All core logic (VLC, favorites, utils) is under `core/`.
+- The main player logic is in `widgets/player/main_player.py` and is imported via `widgets/player.py`.
+- Place your `.mp3` files in the `songs/` folder at the project root.
 
 ---
 
