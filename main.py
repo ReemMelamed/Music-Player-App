@@ -1,7 +1,7 @@
 import sys
 import os
 import random
-
+import json
 import vlc
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QFont, QColor, QKeySequence, QShortcut
@@ -29,6 +29,10 @@ class MusicPlayer(QWidget):
         super().__init__()
         self.setWindowTitle("Re'em - Music Player")
         self.setMinimumSize(700, 420)
+
+        self.favorites = set()
+        self.favorites_file = os.path.join(os.path.dirname(__file__), "favorites.txt")
+        self.load_favorites()
 
         # State
         self.current_song_index = 0
@@ -199,6 +203,16 @@ class MusicPlayer(QWidget):
             }
         """
 
+        self.fav_btn = QPushButton("⭐")
+        self.fav_btn.setStyleSheet(btn_style + "QPushButton { font-size: 18px; min-width: 40px; min-height: 40px; }")
+        self.fav_btn.clicked.connect(self.toggle_favorite)
+        controls.addWidget(self.fav_btn)
+
+        self.show_fav_btn = QPushButton("הצג מועדפים")
+        self.show_fav_btn.setStyleSheet(btn_style + "QPushButton { font-size: 14px; min-width: 80px; min-height: 40px; }")
+        self.show_fav_btn.clicked.connect(self.show_favorites)
+        controls.addWidget(self.show_fav_btn)
+
         self.prev_btn = QPushButton("⏮")
         self.prev_btn.setStyleSheet(btn_style)
         self.prev_btn.clicked.connect(self.prev_song)
@@ -275,12 +289,61 @@ class MusicPlayer(QWidget):
         else:
             self.theme_btn.setText("🌙")
 
+    def toggle_favorite(self):
+        if not self.songs:
+            return
+        song = self.songs[self.current_song_index]
+        if song in self.favorites:
+            self.favorites.remove(song)
+        else:
+            self.favorites.add(song)
+        self.save_favorites()
+        self.update_fav_btn()
+
+    def update_fav_btn(self):
+        if not self.songs:
+            self.fav_btn.setText("⭐")
+            return
+        song = self.songs[self.current_song_index]
+        if song in self.favorites:
+            self.fav_btn.setText("★")
+        else:
+            self.fav_btn.setText("⭐")
+
+    def show_favorites(self):
+        self.song_list.clear()
+        for i, song in enumerate(self.songs):
+            if song in self.favorites:
+                item = QListWidgetItem(os.path.splitext(song)[0])
+                item.setData(Qt.ItemDataRole.UserRole, i)
+                self.song_list.addItem(item)
+        self.show_fav_btn.setText("חזור לרשימה")
+        self.show_fav_btn.clicked.disconnect()
+        self.show_fav_btn.clicked.connect(self.show_all_songs)
+
+    def show_all_songs(self):
+        self.load_songs()
+        self.show_fav_btn.setText("הצג מועדפים")
+        self.show_fav_btn.clicked.disconnect()
+        self.show_fav_btn.clicked.connect(self.show_favorites)
+
+    def load_favorites(self):
+        if os.path.exists(self.favorites_file):
+            with open(self.favorites_file, "r", encoding="utf-8") as f:
+                self.favorites = set(json.load(f))
+
+    def save_favorites(self):
+        with open(self.favorites_file, "w", encoding="utf-8") as f:
+            json.dump(list(self.favorites), f, ensure_ascii=False)
+
+
     # Loads all mp3 songs from the songs directory
     def load_songs(self):
         self.song_list.clear()
         if not os.path.exists(SONGS_DIR):
             os.makedirs(SONGS_DIR)
         self.songs = [f for f in os.listdir(SONGS_DIR) if f.endswith('.mp3')]
+        self.update_fav_btn()
         for i, song in enumerate(self.songs):
             song_name = os.path.splitext(song)[0]
             item = QListWidgetItem(song_name)
@@ -310,6 +373,7 @@ class MusicPlayer(QWidget):
         self.start_song(idx)
 
     def start_song(self, idx):
+        self.update_fav_btn()
         if not self.songs:
             return
         self.current_song_index = idx
