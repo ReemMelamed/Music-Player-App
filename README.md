@@ -1,7 +1,23 @@
-# Music-Player-App 🎵
+# Music-Player-App
 
 A modern, simple desktop music player built with Python, PyQt6, and VLC.  
-Play your local MP3 files with a responsive interface, Hebrew support, search, shuffle, repeat, and keyboard shortcuts.
+Play your local MP3 files with a responsive interface, Hebrew support, search, shuffle, repeat, favorites, and keyboard shortcuts.
+
+---
+
+## Features
+
+- 🎵 Play all your local `.mp3` files from the `songs` folder
+- 🖥️ Modern, responsive interface with dark theme
+- 🔎 Search bar for instant filtering of songs
+- 🔂 Repeat modes: none, repeat one, repeat all
+- 🔀 Shuffle mode
+- ⭐ Mark and view favorite songs
+- ⏩ Seek bar: click or drag to jump to any point in the song
+- ⌨️ Rich keyboard shortcuts (see below)
+- 🏷️ Hebrew and English support
+- 🗂️ Remembers your favorites between sessions
+- 🖱️ Double-click to play, click buttons for controls
 
 ---
 
@@ -32,7 +48,7 @@ Activate the environment:
   ```sh
   .\venv\Scripts\activate
   ```
-- **Mac/Linux:**
+- **Linux:**
   ```sh
   source venv/bin/activate
   ```
@@ -65,9 +81,10 @@ python main.py
 
 - All `.mp3` files in the `songs` folder will appear in the song list.
 - Double-click a song to play it.
-- Use the control buttons for play/pause, next, previous, repeat, and shuffle.
+- Use the control buttons for play/pause, next, previous, repeat, shuffle, and theme.
 - Click or drag on the seek bar to jump to any point in the song.
 - Use the search bar to filter songs by name.
+- Mark songs as favorites with the ⭐ button and view only your favorites.
 - The interface supports both Hebrew and English.
 
 ---
@@ -108,6 +125,96 @@ Music-Player-App-1/
 
 - **Other issues:**  
   Make sure all dependencies are installed and you are using a supported Python version.
+
+---
+
+## Running on Linux
+
+1. **Install Python 3 and pip** (if not already installed):
+   ```sh
+   sudo apt update
+   sudo apt install python3 python3-pip
+   ```
+
+2. **Install VLC:**
+   ```sh
+   sudo apt install vlc
+   ```
+
+3. **Install Python dependencies:**
+   ```sh
+   pip3 install PyQt6 python-vlc
+   ```
+
+4. **Run the app:**
+   ```sh
+   python3 main.py
+   ```
+
+### Creating a Desktop Icon (Linux)
+
+To create a desktop shortcut (icon) for the app:
+
+1. Create a file named `MusicPlayer.desktop` on your desktop:
+   ```sh
+   nano ~/Desktop/MusicPlayer.desktop
+   ```
+2. Paste the following content (update the paths if needed):
+   ```
+   [Desktop Entry]
+   Version=1.0
+   Type=Application
+   Name=Music Player
+   Exec=python3 /home/youruser/Music/Music-Player-App-1/main.py
+   Icon=audio-x-generic
+   Terminal=false
+   ```
+3. Save and exit (`Ctrl+O`, `Enter`, `Ctrl+X`).
+4. Make it executable:
+   ```sh
+   chmod +x ~/Desktop/MusicPlayer.desktop
+   ```
+5. Double-click the icon to launch the app.
+
+---
+
+## Creating a Desktop Shortcut (Windows)
+
+To create a desktop shortcut (icon) that launches the app:
+
+1. Install the required package:
+   ```sh
+   pip install pywin32
+   ```
+2. Save the following script as `create_shortcut.py` in your project folder:
+   ```python
+   import os
+   import sys
+   from win32com.client import Dispatch
+
+   def create_shortcut():
+       desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
+       shortcut_path = os.path.join(desktop, "Music Player.lnk")
+       python_path = sys.executable
+       script_path = r"c:\ . . . \Music-Player-App-1\main.py"
+
+       shell = Dispatch('WScript.Shell')
+       shortcut = shell.CreateShortCut(shortcut_path)
+       shortcut.Targetpath = python_path
+       shortcut.Arguments = f'"{script_path}"'
+       shortcut.WorkingDirectory = os.path.dirname(script_path)
+       shortcut.IconLocation = python_path
+       shortcut.save()
+       print("Shortcut created on Desktop!")
+
+   if __name__ == "__main__":
+       create_shortcut()
+   ```
+3. Run the script:
+   ```sh
+   python create_shortcut.py
+   ```
+4. A "Music Player" icon will appear on your desktop. Double-click to launch the app.
 
 ---
 
