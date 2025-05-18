@@ -7,4 +7,3 @@ class PlayerState:
         self.repeat_mode = "none"
         self.shuffle = False
         self.is_paused = False
-        # Add more state variables as needed
