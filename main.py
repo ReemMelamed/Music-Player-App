@@ -1,18 +1,22 @@
 import sys
 import os
 import random
+
 import vlc
+from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtGui import QFont, QColor, QKeySequence, QShortcut
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QSlider,
-    QListWidget, QListWidgetItem, QFrame, QSplitter
+    QListWidget, QListWidgetItem, QFrame, QSplitter, QLineEdit, QMessageBox
 )
-from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtGui import QFont, QColor
+
 
 SONGS_DIR = os.path.join(os.path.dirname(__file__), "songs")
 
 class ClickableSlider(QSlider):
+    """Slider that allows clicking anywhere to jump to position."""
     def mousePressEvent(self, event):
+        # Allow user to click anywhere on the slider to seek
         if event.button() == Qt.MouseButton.LeftButton:
             x = event.position().x()
             width = self.width()
@@ -36,6 +40,18 @@ class MusicPlayer(QWidget):
             QPushButton { border: none; }
         """)
 
+        QShortcut(QKeySequence("Space"), self, self.toggle_play_pause)
+        QShortcut(QKeySequence("S"), self, self.toggle_play_pause)
+        QShortcut(QKeySequence("Right"), self, self.next_song)
+        QShortcut(QKeySequence("D"), self, self.next_song)
+        QShortcut(QKeySequence("Left"), self, self.prev_song)
+        QShortcut(QKeySequence("A"), self, self.prev_song)
+        QShortcut(QKeySequence("Up"), self, self.toggle_repeat)
+        QShortcut(QKeySequence("W"), self, self.toggle_repeat)
+        QShortcut(QKeySequence("Down"), self, self.toggle_shuffle)
+        QShortcut(QKeySequence("F"), self, lambda: self.search_bar.setFocus())
+        QShortcut(QKeySequence("H"), self, self.show_shortcuts_help)
+
         self.instance = vlc.Instance("--quiet")
         self.player = self.instance.media_player_new()
         self.current_song_index = 0
@@ -49,10 +65,14 @@ class MusicPlayer(QWidget):
         self.timer.start(1000)
         self.load_songs()
 
+    # --- UI SETUP ---
+
     def _setup_ui(self):
+        """Set up the main UI layout and widgets."""
         splitter = QSplitter(Qt.Orientation.Horizontal)
         splitter.setHandleWidth(8)
 
+        # Sidebar with search and song list
         sidebar = QFrame()
         sidebar.setMinimumWidth(180)
         sidebar.setMaximumWidth(500)
@@ -66,6 +86,11 @@ class MusicPlayer(QWidget):
         sidebar_label.setStyleSheet("color: #FFD700; letter-spacing: 1px;")
         sidebar_layout.addWidget(sidebar_label)
 
+        self.search_bar = QLineEdit()
+        self.search_bar.setPlaceholderText("מה אתם רוצים לנגן?")
+        self.search_bar.textChanged.connect(self.filter_songs)
+        sidebar_layout.addWidget(self.search_bar)
+
         self.song_list = QListWidget()
         self.song_list.setFont(QFont("Montserrat", 13, QFont.Weight.DemiBold))
         self.song_list.setStyleSheet("""
@@ -78,6 +103,7 @@ class MusicPlayer(QWidget):
         sidebar_layout.addWidget(self.song_list, 1)
         splitter.addWidget(sidebar)
 
+        # Main content area: now playing, seek bar, controls
         content = QFrame()
         content.setStyleSheet("background: #0A2239; border-top-right-radius: 16px; border-bottom-right-radius: 16px;")
         content_layout = QVBoxLayout(content)
@@ -146,26 +172,31 @@ class MusicPlayer(QWidget):
             }
         """
 
+        # Previous song button
         self.prev_btn = QPushButton("⏮")
         self.prev_btn.setStyleSheet(btn_style)
         self.prev_btn.clicked.connect(self.prev_song)
         controls.addWidget(self.prev_btn)
 
+        # Play/Pause button
         self.play_pause_btn = QPushButton("▶")
         self.play_pause_btn.setStyleSheet(btn_style + "QPushButton { font-size: 28px; min-width: 56px; min-height: 56px; }")
         self.play_pause_btn.clicked.connect(self.toggle_play_pause)
         controls.addWidget(self.play_pause_btn)
 
+        # Next song button
         self.next_btn = QPushButton("⏭")
         self.next_btn.setStyleSheet(btn_style)
         self.next_btn.clicked.connect(self.next_song)
         controls.addWidget(self.next_btn)
 
+        # Repeat button
         self.repeat_btn = QPushButton("🔁")
         self.repeat_btn.setStyleSheet(btn_style + "QPushButton { font-size: 18px; min-width: 40px; min-height: 40px; }")
         self.repeat_btn.clicked.connect(self.toggle_repeat)
         controls.addWidget(self.repeat_btn)
 
+        # Shuffle button
         self.shuffle_btn = QPushButton("🔀")
         self.shuffle_btn.setStyleSheet(btn_style + "QPushButton { font-size: 18px; min-width: 40px; min-height: 40px; }")
         self.shuffle_btn.clicked.connect(self.toggle_shuffle)
@@ -180,7 +211,10 @@ class MusicPlayer(QWidget):
         main_layout.addWidget(splitter)
         main_layout.addWidget(content, 1)
 
+    # --- SONGS MANAGEMENT ---
+
     def load_songs(self):
+        """Load all mp3 songs from the songs directory."""
         self.song_list.clear()
         if not os.path.exists(SONGS_DIR):
             os.makedirs(SONGS_DIR)
@@ -189,6 +223,7 @@ class MusicPlayer(QWidget):
             song_name = os.path.splitext(song)[0]
             item = QListWidgetItem(song_name)
             font = QFont("Segoe UI", 12)
+            # Highlight the current song in the list
             if i == self.current_song_index:
                 font.setBold(True)
                 item.setForeground(QColor("#00BFFF"))
@@ -198,17 +233,30 @@ class MusicPlayer(QWidget):
             item.setFont(font)
             self.song_list.addItem(item)
 
+    def filter_songs(self, text=""):
+        """Filter the song list by search text."""
+        self.song_list.clear()
+        for i, song in enumerate(self.songs):
+            if text.lower() in song.lower():
+                item = QListWidgetItem(os.path.splitext(song)[0])
+                self.song_list.addItem(item)
+
     def song_double_clicked(self, item):
+        """Play song on double click."""
         idx = self.song_list.row(item)
         self.start_song(idx)
 
+    # --- PLAYER CONTROLS ---
+
     def start_song(self, idx):
+        """Start playing the song at the given index."""
         if not self.songs:
             return
         self.current_song_index = idx
         song_name = os.path.splitext(self.songs[idx])[0]
         self.now_playing.setText(song_name)
         self.song_list.setCurrentRow(idx)
+        # Update song list highlighting
         for i in range(self.song_list.count()):
             item = self.song_list.item(i)
             font = QFont("Segoe UI", 12)
@@ -227,6 +275,7 @@ class MusicPlayer(QWidget):
         self.play_pause_btn.setText("⏸")
 
     def toggle_play_pause(self):
+        """Toggle between play and pause."""
         if self.player.is_playing():
             self.player.pause()
             self.is_paused = True
@@ -239,6 +288,7 @@ class MusicPlayer(QWidget):
             self.start_song(self.current_song_index)
 
     def next_song(self):
+        """Play the next song (with repeat/shuffle logic)."""
         if not self.songs:
             return
         if self.repeat_mode == "once":
@@ -261,6 +311,7 @@ class MusicPlayer(QWidget):
             self.start_song(self.current_song_index)
 
     def prev_song(self):
+        """Play the previous song (with shuffle logic)."""
         if not self.songs:
             return
         if self.shuffle:
@@ -270,6 +321,7 @@ class MusicPlayer(QWidget):
         self.start_song(self.current_song_index)
 
     def toggle_repeat(self):
+        """Toggle repeat mode: none → once → always."""
         if self.repeat_mode == "none":
             self.repeat_mode = "once"
             self.repeat_btn.setText("🔁1")
@@ -298,6 +350,7 @@ class MusicPlayer(QWidget):
             )
 
     def toggle_shuffle(self):
+        """Toggle shuffle mode."""
         self.shuffle = not self.shuffle
         if self.shuffle:
             self.shuffle_btn.setStyleSheet(
@@ -315,12 +368,16 @@ class MusicPlayer(QWidget):
             )
 
     def seek_song(self, value):
+        """Seek to a specific position in the song."""
         try:
             self.player.set_time(int(float(value) * 1000))
         except Exception:
             pass
 
+    # --- UI UPDATE ---
+
     def update_ui(self):
+        """Update UI elements like slider and play/pause button."""
         if self.player.is_playing() or self.is_paused:
             try:
                 length = self.player.get_length() // 1000
@@ -337,6 +394,32 @@ class MusicPlayer(QWidget):
             self.play_pause_btn.setText("▶")
         elif state == vlc.State.Playing:
             self.play_pause_btn.setText("⏸")
+
+    # --- SHORTCUTS & EVENTS ---
+
+    def show_shortcuts_help(self):
+        """Show a dialog with all keyboard shortcuts."""
+        msg = QMessageBox(self)
+        msg.setWindowTitle("קיצורי מקלדת")
+        msg.setText(
+            "קיצורי מקלדת:\n"
+            "⏯ ניגון/השהיה = רווח / S\n"
+            "⏭ השיר הבא = → / D\n"
+            "⏮ השיר הקודם: ← / A\n"
+            "🔁 Repeat = ↑ / W\n"
+            "🔀 Shuffle = ↓\n"
+            "🔎 חיפוש שירים = F\n"
+            "❓ עזרה = H\n"
+        )
+        msg.setStyleSheet("""
+        QMessageBox { background: white; }
+        QLabel { background: white; color: #222; font-size: 18px; }
+        QPushButton { background: #f5f5f5; color: #222; border-radius: 8px; min-width: 250px; min-height: 28px; }
+        QPushButton:hover { background: #e0e0e0; }
+    """)
+        msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+        msg.setFixedSize(840, 700)
+        msg.exec()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
