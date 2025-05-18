@@ -1,1 +1,0 @@
-from widgets.player.main_player import MusicPlayer
