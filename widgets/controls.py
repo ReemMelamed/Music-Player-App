@@ -67,34 +67,14 @@ def create_controls(player):
     player.shuffle_btn.clicked.connect(player.toggle_shuffle)
     controls.addWidget(player.shuffle_btn)
 
-    theme_btn_style = """
-        QPushButton {
-            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                                        stop:0 #FFD700, stop:1 #FFF5B7);
-            color: #164B74;
-            border-radius: 20px;
-            font-size: 22px;
-            min-width: 44px;
-            min-height: 44px;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            font-weight: bold;
-            border: 2px solid #e6c200;
-        }
-        QPushButton:hover {
-            background: #FFF5B7;
-            color: #0A2239;
-            border: 2px solid #bfa600;
-        }
-        QPushButton:pressed {
-            background: #e6c200;
-            color: #0A2239;
-            border: 2px solid #bfa600;
-        }
-    """
-    player.theme_btn = QPushButton("🌙")
-    player.theme_btn.setFixedSize(44, 44)
-    player.theme_btn.setStyleSheet(theme_btn_style)
-    player.theme_btn.clicked.connect(player.toggle_theme_icon)
-    controls.addWidget(player.theme_btn)
+    player.add_to_playlist_btn = QPushButton("הוסף לרשימת השמעה")
+    player.add_to_playlist_btn.setStyleSheet(btn_style + "QPushButton { font-size: 14px; min-width: 80px; min-height: 40px; }")
+    player.add_to_playlist_btn.clicked.connect(player.add_current_song_to_playlist)
+    controls.addWidget(player.add_to_playlist_btn)
+
+    player.remove_from_playlist_btn = QPushButton("הסר מרשימת השמעה")
+    player.remove_from_playlist_btn.setStyleSheet(btn_style + "QPushButton { font-size: 14px; min-width: 80px; min-height: 40px; }")
+    player.remove_from_playlist_btn.clicked.connect(player.remove_current_song_from_playlist)
+    controls.addWidget(player.remove_from_playlist_btn)
 
     return controls

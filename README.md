@@ -1,7 +1,7 @@
 # Music-Player-App
 
-A modern, simple desktop music player built with Python, PyQt6, and VLC.  
-Play your local MP3 files with a responsive interface, Hebrew support, search, shuffle, repeat, favorites, and keyboard shortcuts.
+A modern, simple desktop music player built with Python, PyQt6, and VLC  
+Play your local MP3 files with a responsive interface, Hebrew support, search, shuffle, repeat, favorites, playlists, and keyboard shortcuts.
 
 ---
 
@@ -14,9 +14,10 @@ Play your local MP3 files with a responsive interface, Hebrew support, search, s
 - 🔀 Shuffle mode
 - ⭐ Mark and view favorite songs
 - ⏩ Seek bar: click or drag to jump to any point in the song
+- 🗂️ Create, delete, and manage playlists (add/remove songs)
 - ⌨️ Rich keyboard shortcuts (see below)
 - 🏷️ Hebrew and English support
-- 🗂️ Remembers your favorites between sessions
+- 🗂️ Remembers your favorites and playlists between sessions
 - 🖱️ Double-click to play, click buttons for controls
 
 ---
@@ -85,6 +86,7 @@ python main.py
 - Click or drag on the seek bar to jump to any point in the song.
 - Use the search bar to filter songs by name.
 - Mark songs as favorites with the ⭐ button and view only your favorites.
+- Create, delete, and manage playlists (add/remove songs to playlists).
 - The interface supports both Hebrew and English.
 
 ---
@@ -110,15 +112,17 @@ Music-Player-App-1/
 ├── main.py                # Main application file
 ├── README.md
 ├── favorites.txt          # User favorites (JSON)
+├── playlists.json         # User playlists (JSON)
 ├── songs/                 # Place your MP3 files here
 │   └── (your mp3 files)
 ├── core/                  # Core logic (no UI)
 │   ├── favorites_manager.py
+│   ├── playlists_manager.py
 │   ├── utils.py
 │   └── vlc_controller.py
 ├── widgets/               # All UI components
 │   ├── controls.py        # Control buttons (play, pause, etc.)
-│   ├── sidebar.py         # Sidebar (song list, search)
+│   ├── sidebar.py         # Sidebar (song list, search, playlist toggling)
 │   ├── slider.py          # ClickableSlider widget
 │   └── player/            # Main player logic and UI
 │       ├── main_player.py # MusicPlayer class (main logic/UI)
@@ -128,7 +132,7 @@ Music-Player-App-1/
 ```
 
 - All UI code is under `widgets/` (modularized by component).
-- All core logic (VLC, favorites, utils) is under `core/`.
+- All core logic (VLC, favorites, playlists, utils) is under `core/`.
 - The main player logic is in `widgets/player/main_player.py`.
 - Place your `.mp3` files in the `songs/` folder at the project root.
 
@@ -215,7 +219,7 @@ To create a desktop shortcut (icon) that launches the app:
        desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
        shortcut_path = os.path.join(desktop, "Music Player.lnk")
        python_path = sys.executable
-       script_path = r"c:\ . . . \Music-Player-App-1\main.py"
+       script_path = r"c:\\...\\Music-Player-App-1\\main.py"
 
        shell = Dispatch('WScript.Shell')
        shortcut = shell.CreateShortCut(shortcut_path)

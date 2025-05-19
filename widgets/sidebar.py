@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QFrame, QVBoxLayout, QLabel, QLineEdit, QListWidget
+from PyQt6.QtWidgets import QFrame, QVBoxLayout, QLabel, QLineEdit, QListWidget, QPushButton, QInputDialog, QMessageBox
 from PyQt6.QtGui import QFont
 from PyQt6.QtCore import Qt
 
@@ -28,4 +28,33 @@ def create_sidebar(player):
     player.song_list.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
     player.song_list.itemDoubleClicked.connect(player.song_double_clicked)
     sidebar_layout.addWidget(player.song_list, 1)
+    # עיצוב אחיד לכפתורים
+    btn_style = """
+        QPushButton {
+            background: #FFD700;
+            color: #00BFFF;
+            border-radius: 16px;
+            font-size: 15px;
+            min-width: 80px;
+            min-height: 36px;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-weight: bold;
+            border: 2px solid #e6c200;
+        }
+        QPushButton:hover {
+            background: #FFF5B7;
+            color: #164B74;
+            border: 2px solid #bfa600;
+        }
+        QPushButton:pressed {
+            background: #e6c200;
+            color: #164B74;
+            border: 2px solid #bfa600;
+        }
+    """
+    player.show_playlists_btn = QPushButton("הצג רשימות השמעה")
+    player.show_playlists_btn.setStyleSheet(btn_style)
+    sidebar_layout.addWidget(player.show_playlists_btn)
+    player.show_playlists_btn.clicked.connect(player.toggle_playlists_view)
+
     return sidebar

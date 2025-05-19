@@ -2,11 +2,11 @@ import os
 import json
 import sys
 
-FAVORITES_PATH = os.path.join(sys.path[0], "favorites.txt")
+FAVORITES_FILE = os.path.join(sys.path[0], "favorites.txt")
 
 class FavoritesManager:
     def __init__(self):
-        self.favorites_file = FAVORITES_PATH
+        self.favorites_file = FAVORITES_FILE
         self.favorites = set()
         self.load_favorites()
 
