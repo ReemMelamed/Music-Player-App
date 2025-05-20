@@ -255,7 +255,6 @@ class MusicPlayer(QWidget):
         self.play_pause_btn.setText("⏸")
 
     def toggle_play_pause(self):
-        # Toggle between play and pause
         if self.player.is_playing():
             self.player.pause()
             self.is_paused = True
@@ -330,7 +329,6 @@ class MusicPlayer(QWidget):
             )
 
     def toggle_shuffle(self):
-        # Toggle shuffle mode
         self.shuffle = not self.shuffle
         if self.shuffle:
             self.shuffle_btn.setStyleSheet(
@@ -411,14 +409,17 @@ class MusicPlayer(QWidget):
         msg.exec()
 
     def show_playlist_songs(self, item):
-        # Show all songs in the selected playlist
         playlist_name = item.text()
         playlists = self.playlists_manager.load_playlists()
         for pl in playlists:
             if pl["name"] == playlist_name:
                 self.song_list.clear()
                 for song in pl["songs"]:
-                    self.song_list.addItem(QListWidgetItem(song))
+                    if song in self.songs:
+                        idx = self.songs.index(song)
+                        item = QListWidgetItem(os.path.splitext(song)[0])
+                        item.setData(Qt.ItemDataRole.UserRole, idx)
+                        self.song_list.addItem(item)
                 break
         if hasattr(self, "show_playlists_btn") and self.show_playlists_btn is not None:
             self.show_playlists_btn.hide()
@@ -515,7 +516,6 @@ class MusicPlayer(QWidget):
                 self.create_playlist_btn = None
 
     def show_playlist_context_menu(self, pos):
-        # Show context menu for playlist actions (delete)
         item = self.song_list.itemAt(pos)
         if not item:
             return
@@ -535,7 +535,6 @@ class MusicPlayer(QWidget):
                 self.toggle_playlists_view()
 
     def add_current_song_to_playlist(self):
-        # Add the current song to a selected playlist
         playlists = [pl["name"] for pl in self.playlists_manager.load_playlists()]
         if not playlists:
             QMessageBox.information(self, "הוספה", "אין רשימות השמעה קיימות. צור אחת תחילה.")
@@ -547,7 +546,6 @@ class MusicPlayer(QWidget):
             QMessageBox.information(self, "הוספה", f"השיר נוסף לרשימה '{playlist_name}'.")
 
     def remove_current_song_from_playlist(self):
-        # Remove the current song from a selected playlist
         song = self.songs[self.current_song_index]
         playlists = [pl["name"] for pl in self.playlists_manager.load_playlists() if song in pl["songs"]]
         if not playlists:
