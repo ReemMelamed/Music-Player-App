@@ -434,7 +434,7 @@ class MusicPlayer(QWidget):
         self.back_to_playlists_btn.setStyleSheet(
             "background: #FFD700; color: #164B74; font-weight: bold; border-radius: 8px; padding: 8px; margin-top: 12px;"
         )
-        self.back_to_playlists_btn.clicked.connect(self.toggle_playlists_view)
+        self.back_to_playlists_btn.clicked.connect(self.show_playlists_list)
         sidebar_layout = self.song_list.parentWidget().layout()
         sidebar_layout.addWidget(self.back_to_playlists_btn)
         self.back_to_playlists_btn.show()
@@ -514,6 +514,65 @@ class MusicPlayer(QWidget):
                 sidebar_layout.removeWidget(self.create_playlist_btn)
                 self.create_playlist_btn.deleteLater()
                 self.create_playlist_btn = None
+
+    def show_playlists_list(self):
+        # Show the list of playlists in the sidebar
+        if hasattr(self, "show_playlists_btn") and self.show_playlists_btn is not None:
+            self.show_playlists_btn.show()
+        if hasattr(self, "back_to_playlists_btn") and self.back_to_playlists_btn is not None:
+            self.back_to_playlists_btn.hide()
+            sidebar_layout = self.song_list.parentWidget().layout()
+            sidebar_layout.removeWidget(self.back_to_playlists_btn)
+            self.back_to_playlists_btn.deleteLater()
+            self.back_to_playlists_btn = None
+        if hasattr(self, "create_playlist_btn") and self.create_playlist_btn is not None:
+            sidebar_layout = self.song_list.parentWidget().layout()
+            sidebar_layout.removeWidget(self.create_playlist_btn)
+            self.create_playlist_btn.deleteLater()
+            self.create_playlist_btn = None
+        self.song_list.clear()
+        playlists = self.playlists_manager.load_playlists()
+        try:
+            self.song_list.itemClicked.disconnect()
+        except TypeError:
+            pass
+        for pl in playlists:
+            item = QListWidgetItem(pl["name"])
+            self.song_list.addItem(item)
+        self.song_list.itemClicked.connect(self.show_playlist_songs)
+        self.song_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.song_list.customContextMenuRequested.connect(self.show_playlist_context_menu)
+        self.show_playlists_btn.setText("חזור לרשימת השירים")
+        self.showing_playlists = True
+        from PyQt6.QtWidgets import QPushButton
+        btn_style = """
+            QPushButton {
+                background: #FFD700;
+                color: #00BFFF;
+                border-radius: 16px;
+                font-size: 15px;
+                min-width: 80px;
+                min-height: 36px;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-weight: bold;
+                border: 2px solid #e6c200;
+            }
+            QPushButton:hover {
+                background: #FFF5B7;
+                color: #164B74;
+                border: 2px solid #bfa600;
+            }
+            QPushButton:pressed {
+                background: #e6c200;
+                color: #164B74;
+                border: 2px solid #bfa600;
+            }
+        """
+        self.create_playlist_btn = QPushButton("צור רשימת השמעה")
+        self.create_playlist_btn.setStyleSheet(btn_style)
+        self.create_playlist_btn.clicked.connect(self.create_new_playlist)
+        sidebar_layout = self.song_list.parentWidget().layout()
+        sidebar_layout.addWidget(self.create_playlist_btn)
 
     def show_playlist_context_menu(self, pos):
         item = self.song_list.itemAt(pos)
