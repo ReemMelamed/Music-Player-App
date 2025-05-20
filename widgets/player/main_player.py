@@ -1,6 +1,5 @@
 # Main player logic and UI for the music player app
 # This is the central widget that manages playback, playlists, favorites, and all user interactions
-# If you add new features, keep UI logic and state management here unless it clearly belongs elsewhere
 import sys
 import os
 import random
@@ -58,6 +57,9 @@ class MusicPlayer(QWidget):
         self.timer.timeout.connect(self.update_ui)
         self.timer.start(1000)
         self.load_songs()
+
+        self.active_playlist_songs = None
+        self.active_playlist_index = None
 
     def _setup_shortcuts(self):
         # Keyboard shortcuts for all main actions
@@ -222,32 +224,48 @@ class MusicPlayer(QWidget):
                 self.song_list.addItem(item)
 
     def song_double_clicked(self, item):
-        # Play song on double click in the list
         idx = item.data(Qt.ItemDataRole.UserRole)
-        if idx is None:
-            idx = self.song_list.row(item)
-        self.start_song(idx)
+        if self.active_playlist_songs:
+            # קבל את שם השיר שנבחר (מתוך הפלייליסט)
+            song_name = os.path.splitext(item.text())[0]
+            for i, song in enumerate(self.active_playlist_songs):
+                if os.path.splitext(song)[0] == song_name:
+                    self.start_song(i)
+                    return
+        else:
+            if idx is None:
+                idx = self.song_list.row(item)
+            self.start_song(idx)
 
     def start_song(self, idx):
         # Start playback of the song at index idx
+        if self.active_playlist_songs:
+            song = self.active_playlist_songs[idx]
+            self.active_playlist_index = idx
+            self.current_song_index = self.songs.index(song)
+            song_name = os.path.splitext(song)[0]
+            song_path = os.path.join(SONGS_DIR, song)
+        else:
+            self.current_song_index = idx
+            song_name = os.path.splitext(self.songs[idx])[0]
+            song_path = os.path.join(SONGS_DIR, self.songs[idx])
         self.update_fav_btn()
         if not self.songs:
             return
-        self.current_song_index = idx
-        song_name = os.path.splitext(self.songs[idx])[0]
         self.now_playing.setText(song_name)
-        self.song_list.setCurrentRow(idx)
+        # Update song_list selection by matching the displayed name
         for i in range(self.song_list.count()):
             item = self.song_list.item(i)
+            item_name = item.text()
             font = QFont("Segoe UI", 12)
-            if i == idx:
+            if item_name == song_name:
                 font.setBold(True)
                 item.setForeground(QColor("#00BFFF"))
+                self.song_list.setCurrentRow(i)
             else:
                 font.setBold(False)
                 item.setForeground(QColor("#FFD700"))
             item.setFont(font)
-        song_path = os.path.join(SONGS_DIR, self.songs[idx])
         media = self.instance.media_new(song_path)
         self.player.set_media(media)
         self.player.play()
@@ -269,6 +287,13 @@ class MusicPlayer(QWidget):
     def next_song(self):
         # Go to next song (handles repeat and shuffle modes)
         if not self.songs:
+            return
+        if self.active_playlist_songs:
+            if self.shuffle:
+                self.active_playlist_index = random.randint(0, len(self.active_playlist_songs) - 1)
+            else:
+                self.active_playlist_index = (self.active_playlist_index + 1) % len(self.active_playlist_songs)
+            self.start_song(self.active_playlist_index)
             return
         if self.repeat_mode == "once":
             self.start_song(self.current_song_index)
@@ -292,6 +317,13 @@ class MusicPlayer(QWidget):
     def prev_song(self):
         # Go to previous song (handles shuffle mode)
         if not self.songs:
+            return
+        if self.active_playlist_songs:
+            if self.shuffle:
+                self.active_playlist_index = random.randint(0, len(self.active_playlist_songs) - 1)
+            else:
+                self.active_playlist_index = (self.active_playlist_index - 1) % len(self.active_playlist_songs)
+            self.start_song(self.active_playlist_index)
             return
         if self.shuffle:
             self.current_song_index = random.randint(0, len(self.songs) - 1)
@@ -413,13 +445,21 @@ class MusicPlayer(QWidget):
         playlists = self.playlists_manager.load_playlists()
         for pl in playlists:
             if pl["name"] == playlist_name:
+                self.active_playlist_songs = [song for song in pl["songs"] if song in self.songs]
+                selected_song_name = item.text()
+                idx_in_playlist = 0
+                for i, song in enumerate(self.active_playlist_songs):
+                    if os.path.splitext(song)[0] == selected_song_name:
+                        idx_in_playlist = i
+                        break
+                self.active_playlist_index = idx_in_playlist
                 self.song_list.clear()
                 for song in pl["songs"]:
                     if song in self.songs:
                         idx = self.songs.index(song)
-                        item = QListWidgetItem(os.path.splitext(song)[0])
-                        item.setData(Qt.ItemDataRole.UserRole, idx)
-                        self.song_list.addItem(item)
+                        song_item = QListWidgetItem(os.path.splitext(song)[0])
+                        song_item.setData(Qt.ItemDataRole.UserRole, idx)
+                        self.song_list.addItem(song_item)
                 break
         if hasattr(self, "show_playlists_btn") and self.show_playlists_btn is not None:
             self.show_playlists_btn.hide()
@@ -517,6 +557,8 @@ class MusicPlayer(QWidget):
 
     def show_playlists_list(self):
         # Show the list of playlists in the sidebar
+        self.active_playlist_songs = None
+        self.active_playlist_index = None
         if hasattr(self, "show_playlists_btn") and self.show_playlists_btn is not None:
             self.show_playlists_btn.show()
         if hasattr(self, "back_to_playlists_btn") and self.back_to_playlists_btn is not None:
