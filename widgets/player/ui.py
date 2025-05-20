@@ -12,7 +12,7 @@ class PlayerUI:
     def _setup_ui(self):
         splitter = QSplitter(Qt.Orientation.Horizontal)
         splitter.setHandleWidth(8)
-        # Sidebar (copied from player.py)
+        # Sidebar 
         sidebar = QFrame()
         sidebar.setMinimumWidth(180)
         sidebar.setMaximumWidth(500)

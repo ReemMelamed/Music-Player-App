@@ -31,7 +31,7 @@ def create_controls(player):
     player.fav_btn.clicked.connect(player.toggle_favorite)
     controls.addWidget(player.fav_btn)
 
-    player.show_fav_btn = QPushButton("הצג מועדפים")
+    player.show_fav_btn = QPushButton("מועדפים")
     player.show_fav_btn.setStyleSheet(btn_style + "QPushButton { font-size: 14px; min-width: 80px; min-height: 40px; }")
     player.show_fav_btn.clicked.connect(player.show_favorites)
     controls.addWidget(player.show_fav_btn)
@@ -67,12 +67,12 @@ def create_controls(player):
     player.shuffle_btn.clicked.connect(player.toggle_shuffle)
     controls.addWidget(player.shuffle_btn)
 
-    player.add_to_playlist_btn = QPushButton("הוסף לרשימת השמעה")
+    player.add_to_playlist_btn = QPushButton("הוסף")
     player.add_to_playlist_btn.setStyleSheet(btn_style + "QPushButton { font-size: 14px; min-width: 80px; min-height: 40px; }")
     player.add_to_playlist_btn.clicked.connect(player.add_current_song_to_playlist)
     controls.addWidget(player.add_to_playlist_btn)
 
-    player.remove_from_playlist_btn = QPushButton("הסר מרשימת השמעה")
+    player.remove_from_playlist_btn = QPushButton("הסר")
     player.remove_from_playlist_btn.setStyleSheet(btn_style + "QPushButton { font-size: 14px; min-width: 80px; min-height: 40px; }")
     player.remove_from_playlist_btn.clicked.connect(player.remove_current_song_from_playlist)
     controls.addWidget(player.remove_from_playlist_btn)

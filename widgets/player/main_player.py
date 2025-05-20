@@ -27,7 +27,7 @@ class MusicPlayer(QWidget):
         self.setMinimumSize(700, 420)
         # Favorites management
         self.favorites = set()
-        self.favorites_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "favorites.txt")
+        self.favorites_file = os.path.join(sys.path[0], "favorites.txt")
         self.load_favorites()
         # Playlist manager
         self.playlists_manager = PlaylistsManager()
@@ -177,7 +177,7 @@ class MusicPlayer(QWidget):
     def show_all_songs(self):
         # Restore the full song list
         self.load_songs()
-        self.show_fav_btn.setText("הצג מועדפים")
+        self.show_fav_btn.setText("מועדפים")
         self.show_fav_btn.clicked.disconnect()
         self.show_fav_btn.clicked.connect(self.show_favorites)
 
@@ -540,7 +540,7 @@ class MusicPlayer(QWidget):
         if not playlists:
             QMessageBox.information(self, "הוספה", "אין רשימות השמעה קיימות. צור אחת תחילה.")
             return
-        playlist_name, ok = QInputDialog.getItem(self, "הוסף לרשימת השמעה", "בחר רשימה:", playlists, editable=False)
+        playlist_name, ok = QInputDialog.getItem(self, "הוסף", "בחר רשימה:", playlists, editable=False)
         if ok and playlist_name:
             song = self.songs[self.current_song_index]
             self.playlists_manager.add_to_playlist(song, playlist_name)
@@ -551,7 +551,7 @@ class MusicPlayer(QWidget):
         song = self.songs[self.current_song_index]
         playlists = [pl["name"] for pl in self.playlists_manager.load_playlists() if song in pl["songs"]]
         if not playlists:
-            QMessageBox.information(self, "הסר מרשימת השמעה", "השיר לא נמצא באף רשימת השמעה.")
+            QMessageBox.information(self, "הסר", "השיר לא נמצא באף רשימת השמעה.")
             return
         playlist_name, ok = QInputDialog.getItem(self, "הסר מרשימת השמעה", "בחר רשימה:", playlists, editable=False)
         if ok and playlist_name:
