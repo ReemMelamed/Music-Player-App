@@ -8,7 +8,7 @@ import vlc
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QFont, QColor, QKeySequence, QShortcut
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QInputDialog, QHBoxLayout, QLabel, QFrame, QSplitter, QLineEdit, QMessageBox, QListWidgetItem
+    QWidget, QVBoxLayout, QInputDialog, QHBoxLayout, QLabel, QFrame, QSplitter, QLineEdit, QMessageBox, QListWidgetItem, QPushButton, QMenu
 )
 from widgets.slider import ClickableSlider
 from widgets.controls import create_controls
@@ -223,42 +223,11 @@ class MusicPlayer(QWidget):
                 item.setData(Qt.ItemDataRole.UserRole, i)
                 self.song_list.addItem(item)
 
-    def song_double_clicked(self, item):
-        idx = item.data(Qt.ItemDataRole.UserRole)
-        if self.active_playlist_songs:
-            # קבל את שם השיר שנבחר (מתוך הפלייליסט)
-            song_name = os.path.splitext(item.text())[0]
-            for i, song in enumerate(self.active_playlist_songs):
-                if os.path.splitext(song)[0] == song_name:
-                    self.start_song(i)
-                    return
-        else:
-            if idx is None:
-                idx = self.song_list.row(item)
-            self.start_song(idx)
-
-    def start_song(self, idx):
-        # Start playback of the song at index idx
-        if self.active_playlist_songs:
-            song = self.active_playlist_songs[idx]
-            self.active_playlist_index = idx
-            self.current_song_index = self.songs.index(song)
-            song_name = os.path.splitext(song)[0]
-            song_path = os.path.join(SONGS_DIR, song)
-        else:
-            self.current_song_index = idx
-            song_name = os.path.splitext(self.songs[idx])[0]
-            song_path = os.path.join(SONGS_DIR, self.songs[idx])
-        self.update_fav_btn()
-        if not self.songs:
-            return
-        self.now_playing.setText(song_name)
-        # Update song_list selection by matching the displayed name
+    def update_song_list_selection(self, song_name):
         for i in range(self.song_list.count()):
             item = self.song_list.item(i)
-            item_name = item.text()
             font = QFont("Segoe UI", 12)
-            if item_name == song_name:
+            if item.text() == song_name:
                 font.setBold(True)
                 item.setForeground(QColor("#00BFFF"))
                 self.song_list.setCurrentRow(i)
@@ -266,11 +235,79 @@ class MusicPlayer(QWidget):
                 font.setBold(False)
                 item.setForeground(QColor("#FFD700"))
             item.setFont(font)
+
+    def start_song(self, idx):
+        # Start playback of the song at index idx
+        if self.active_playlist_songs:
+            song = self.active_playlist_songs[idx]
+            self.active_playlist_index = idx
+            self.current_song_index = self.songs.index(song)
+        else:
+            self.current_song_index = idx
+            song = self.songs[idx]
+        self.update_fav_btn()
+        if not self.songs:
+            return
+        song_name = os.path.splitext(song)[0]
+        self.now_playing.setText(song_name)
+        self.update_song_list_selection(song_name)
+        song_path = os.path.join(SONGS_DIR, song)
         media = self.instance.media_new(song_path)
         self.player.set_media(media)
         self.player.play()
         self.is_paused = False
         self.play_pause_btn.setText("⏸")
+
+    def song_double_clicked(self, item):
+        song_name = os.path.splitext(item.text())[0]
+        if self.active_playlist_songs:
+            idx = next((i for i, song in enumerate(self.active_playlist_songs) if os.path.splitext(song)[0] == song_name), None)
+            if idx is not None:
+                self.start_song(idx)
+        else:
+            idx = item.data(Qt.ItemDataRole.UserRole)
+            if idx is None:
+                idx = self.song_list.row(item)
+            self.start_song(idx)
+
+    def show_playlist_songs(self, item):
+        playlist_name = item.text()
+        self.current_playlist_name = playlist_name  # Store for context menu use
+        playlists = self.playlists_manager.load_playlists()
+        for pl in playlists:
+            if pl["name"] == playlist_name:
+                self.active_playlist_songs = [song for song in pl["songs"] if song in self.songs]
+                self.song_list.clear()
+                for song in pl["songs"]:
+                    if song in self.songs:
+                        idx = self.songs.index(song)
+                        song_item = QListWidgetItem(os.path.splitext(song)[0])
+                        song_item.setData(Qt.ItemDataRole.UserRole, idx)
+                        self.song_list.addItem(song_item)
+                break
+        if hasattr(self, "show_playlists_btn") and self.show_playlists_btn is not None:
+            self.show_playlists_btn.hide()
+        if hasattr(self, "back_to_playlists_btn") and self.back_to_playlists_btn is not None:
+            self.back_to_playlists_btn.hide()
+            sidebar_layout = self.song_list.parentWidget().layout()
+            sidebar_layout.removeWidget(self.back_to_playlists_btn)
+            self.back_to_playlists_btn.deleteLater()
+            self.back_to_playlists_btn = None
+        self.back_to_playlists_btn = QPushButton("חזור לרשימות ההשמעה")
+        self.back_to_playlists_btn.setStyleSheet(
+            "background: #FFD700; color: #164B74; font-weight: bold; border-radius: 8px; padding: 8px; margin-top: 12px;"
+        )
+        self.back_to_playlists_btn.clicked.connect(self.show_playlists_list)
+        sidebar_layout = self.song_list.parentWidget().layout()
+        sidebar_layout.addWidget(self.back_to_playlists_btn)
+        self.back_to_playlists_btn.show()
+        # Set context menu for removing song from playlist
+        self.song_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        try:
+            self.song_list.customContextMenuRequested.disconnect()
+        except Exception:
+            pass
+        self.song_list.customContextMenuRequested.connect(self.show_remove_song_from_playlist_menu)
 
     def toggle_play_pause(self):
         if self.player.is_playing():
@@ -440,45 +477,6 @@ class MusicPlayer(QWidget):
         msg.setFixedSize(840, 700)
         msg.exec()
 
-    def show_playlist_songs(self, item):
-        playlist_name = item.text()
-        playlists = self.playlists_manager.load_playlists()
-        for pl in playlists:
-            if pl["name"] == playlist_name:
-                self.active_playlist_songs = [song for song in pl["songs"] if song in self.songs]
-                selected_song_name = item.text()
-                idx_in_playlist = 0
-                for i, song in enumerate(self.active_playlist_songs):
-                    if os.path.splitext(song)[0] == selected_song_name:
-                        idx_in_playlist = i
-                        break
-                self.active_playlist_index = idx_in_playlist
-                self.song_list.clear()
-                for song in pl["songs"]:
-                    if song in self.songs:
-                        idx = self.songs.index(song)
-                        song_item = QListWidgetItem(os.path.splitext(song)[0])
-                        song_item.setData(Qt.ItemDataRole.UserRole, idx)
-                        self.song_list.addItem(song_item)
-                break
-        if hasattr(self, "show_playlists_btn") and self.show_playlists_btn is not None:
-            self.show_playlists_btn.hide()
-        if hasattr(self, "back_to_playlists_btn") and self.back_to_playlists_btn is not None:
-            self.back_to_playlists_btn.hide()
-            sidebar_layout = self.song_list.parentWidget().layout()
-            sidebar_layout.removeWidget(self.back_to_playlists_btn)
-            self.back_to_playlists_btn.deleteLater()
-            self.back_to_playlists_btn = None
-        from PyQt6.QtWidgets import QPushButton
-        self.back_to_playlists_btn = QPushButton("חזור לרשימות ההשמעה")
-        self.back_to_playlists_btn.setStyleSheet(
-            "background: #FFD700; color: #164B74; font-weight: bold; border-radius: 8px; padding: 8px; margin-top: 12px;"
-        )
-        self.back_to_playlists_btn.clicked.connect(self.show_playlists_list)
-        sidebar_layout = self.song_list.parentWidget().layout()
-        sidebar_layout.addWidget(self.back_to_playlists_btn)
-        self.back_to_playlists_btn.show()
-
     def toggle_playlists_view(self):
         # Toggle between playlists list and song list
         if hasattr(self, "show_playlists_btn") and self.show_playlists_btn is not None:
@@ -511,7 +509,6 @@ class MusicPlayer(QWidget):
             self.song_list.customContextMenuRequested.connect(self.show_playlist_context_menu)
             self.show_playlists_btn.setText("חזור לרשימת השירים")
             self.showing_playlists = True
-            from PyQt6.QtWidgets import QPushButton
             btn_style = """
                 QPushButton {
                     background: #FFD700;
@@ -559,6 +556,13 @@ class MusicPlayer(QWidget):
         # Show the list of playlists in the sidebar
         self.active_playlist_songs = None
         self.active_playlist_index = None
+        # Reset context menu to playlist context
+        self.song_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        try:
+            self.song_list.customContextMenuRequested.disconnect()
+        except Exception:
+            pass
+        self.song_list.customContextMenuRequested.connect(self.show_playlist_context_menu)
         if hasattr(self, "show_playlists_btn") and self.show_playlists_btn is not None:
             self.show_playlists_btn.show()
         if hasattr(self, "back_to_playlists_btn") and self.back_to_playlists_btn is not None:
@@ -586,7 +590,6 @@ class MusicPlayer(QWidget):
         self.song_list.customContextMenuRequested.connect(self.show_playlist_context_menu)
         self.show_playlists_btn.setText("חזור לרשימת השירים")
         self.showing_playlists = True
-        from PyQt6.QtWidgets import QPushButton
         btn_style = """
             QPushButton {
                 background: #FFD700;
@@ -620,20 +623,44 @@ class MusicPlayer(QWidget):
         item = self.song_list.itemAt(pos)
         if not item:
             return
-        from PyQt6.QtWidgets import QMenu
         menu = QMenu(self)
-        delete_action = menu.addAction("מחק פלייליסט")
+        delete_action = menu.addAction("מחק רשימת השמעה")
         action = menu.exec(self.song_list.mapToGlobal(pos))
         if action == delete_action:
             playlist_name = item.text()
-            reply = QMessageBox.question(self, "אישור מחיקה", f"האם למחוק את הפלייליסט '{playlist_name}'?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+            reply = QMessageBox.question(self, "אישור מחיקה", f"האם למחוק את רשימת ההשמעה '{playlist_name}'?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
             if reply == QMessageBox.StandardButton.Yes:
                 playlists = self.playlists_manager.load_playlists()
                 playlists = [pl for pl in playlists if pl["name"] != playlist_name]
                 self.playlists_manager.save_playlists(playlists)
-                QMessageBox.information(self, "נמחק", f"הפלייליסט '{playlist_name}' נמחק.")
                 self.toggle_playlists_view()
                 self.toggle_playlists_view()
+
+
+    def show_remove_song_from_playlist_menu(self, pos):
+        item = self.song_list.itemAt(pos)
+        if not item:
+            return
+        from PyQt6.QtWidgets import QMenu
+        menu = QMenu(self)
+        remove_action = menu.addAction("הסר שיר מהפלייליסט")
+        action = menu.exec(self.song_list.mapToGlobal(pos))
+        if action == remove_action:
+            song_name = item.text()
+            playlist_name = getattr(self, "current_playlist_name", None)
+            if not playlist_name:
+                QMessageBox.warning(self, "שגיאה", "לא ניתן לזהות את הפלייליסט.")
+                return
+            song_filename = None
+            for song in self.songs:
+                if os.path.splitext(song)[0] == song_name:
+                    song_filename = song
+                    break
+            if not song_filename:
+                QMessageBox.warning(self, "שגיאה", "לא נמצא קובץ שיר תואם.")
+                return
+            self.playlists_manager.remove_from_playlist(song_filename, playlist_name)
+            self.show_playlist_songs(QListWidgetItem(playlist_name))
 
     def add_current_song_to_playlist(self):
         playlists = [pl["name"] for pl in self.playlists_manager.load_playlists()]
@@ -644,7 +671,6 @@ class MusicPlayer(QWidget):
         if ok and playlist_name:
             song = self.songs[self.current_song_index]
             self.playlists_manager.add_to_playlist(song, playlist_name)
-            QMessageBox.information(self, "הוספה", f"השיר נוסף לרשימה '{playlist_name}'.")
 
     def remove_current_song_from_playlist(self):
         song = self.songs[self.current_song_index]
@@ -655,7 +681,6 @@ class MusicPlayer(QWidget):
         playlist_name, ok = QInputDialog.getItem(self, "הסר מרשימת השמעה", "בחר רשימה:", playlists, editable=False)
         if ok and playlist_name:
             self.playlists_manager.remove_from_playlist(song, playlist_name)
-            QMessageBox.information(self, "הסרה", f"השיר הוסר מהרשימה '{playlist_name}'.")
 
     def create_new_playlist(self):
         # Create a new playlist with a unique name
@@ -670,7 +695,6 @@ class MusicPlayer(QWidget):
         all_playlists = self.playlists_manager.load_playlists()
         all_playlists.append({"name": name, "songs": []})
         self.playlists_manager.save_playlists(all_playlists)
-        QMessageBox.information(self, "נוצרה רשימה", f"הרשימה '{name}' נוצרה בהצלחה.")
         if hasattr(self, 'showing_playlists') and self.showing_playlists:
             self.toggle_playlists_view()
             self.toggle_playlists_view()
