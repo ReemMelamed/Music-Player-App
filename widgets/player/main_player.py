@@ -195,11 +195,11 @@ class MusicPlayer(QWidget):
             json.dump(list(self.favorites), f, ensure_ascii=False)
 
     def load_songs(self):
-        # Load all mp3 files from the songs directory
+        # Load all mp3 and wav files from the songs directory
         self.song_list.clear()
         if not os.path.exists(SONGS_DIR):
             os.makedirs(SONGS_DIR)
-        self.songs = [f for f in os.listdir(SONGS_DIR) if f.endswith('.mp3')]
+        self.songs = [f for f in os.listdir(SONGS_DIR) if f.lower().endswith(('.mp3', '.wav'))]
         self.update_fav_btn()
         for i, song in enumerate(self.songs):
             song_name = os.path.splitext(song)[0]
