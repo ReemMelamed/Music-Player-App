@@ -8,7 +8,7 @@ import vlc
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QFont, QColor, QKeySequence, QShortcut
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QInputDialog, QHBoxLayout, QLabel, QFrame, QSplitter, QLineEdit, QMessageBox, QListWidgetItem, QPushButton, QMenu
+    QWidget, QVBoxLayout, QInputDialog, QHBoxLayout, QLabel, QFrame, QSplitter, QLineEdit, QMessageBox, QListWidgetItem, QPushButton, QMenu, QListWidget
 )
 from widgets.slider import ClickableSlider
 from widgets.controls import create_controls
@@ -698,3 +698,23 @@ class MusicPlayer(QWidget):
         if hasattr(self, 'showing_playlists') and self.showing_playlists:
             self.toggle_playlists_view()
             self.toggle_playlists_view()
+
+    def save_playlist_order(self):
+        if not self.active_playlist_songs or not hasattr(self, "current_playlist_name"):
+            return
+        # סדר חדש לפי הרשימה ב־QListWidget
+        new_order = []
+        for i in range(self.song_list.count()):
+            song_name = self.song_list.item(i).text()
+            for song in self.songs:
+                if os.path.splitext(song)[0] == song_name:
+                    new_order.append(song)
+                    break
+        # עדכן את הפלייליסט בקובץ
+        playlists = self.playlists_manager.load_playlists()
+        for pl in playlists:
+            if pl["name"] == self.current_playlist_name:
+                pl["songs"] = new_order
+                break
+        self.playlists_manager.save_playlists(playlists)
+        self.active_playlist_songs = new_order

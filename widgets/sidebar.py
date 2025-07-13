@@ -2,6 +2,17 @@ from PyQt6.QtWidgets import QFrame, QVBoxLayout, QLabel, QLineEdit, QListWidget,
 from PyQt6.QtGui import QFont
 from PyQt6.QtCore import Qt
 
+class PlaylistSongListWidget(QListWidget):
+    def __init__(self, parent=None, main_player=None):
+        super().__init__(parent)
+        self.main_player = main_player
+
+    def dropEvent(self, event):
+        super().dropEvent(event)
+        # שמור סדר חדש רק אם מוצג פלייליסט
+        if self.main_player and self.main_player.active_playlist_songs is not None:
+            self.main_player.save_playlist_order()
+
 def create_sidebar(player):
     sidebar = QFrame()
     sidebar.setMinimumWidth(180)
@@ -18,7 +29,7 @@ def create_sidebar(player):
     player.search_bar.setPlaceholderText("מה אתם רוצים לנגן?")
     player.search_bar.textChanged.connect(player.filter_songs)
     sidebar_layout.addWidget(player.search_bar)
-    player.song_list = QListWidget()
+    player.song_list = PlaylistSongListWidget(main_player=player)
     player.song_list.setFont(QFont("Montserrat", 13, QFont.Weight.DemiBold))
     player.song_list.setStyleSheet("""
         QListWidget { padding-right: 0px; }
@@ -26,6 +37,8 @@ def create_sidebar(player):
     """)
     player.song_list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
     player.song_list.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+    player.song_list.setDragDropMode(player.song_list.DragDropMode.InternalMove)
+    player.song_list.setDefaultDropAction(Qt.DropAction.MoveAction)
     player.song_list.itemDoubleClicked.connect(player.song_double_clicked)
     sidebar_layout.addWidget(player.song_list, 1)
     # עיצוב אחיד לכפתורים
