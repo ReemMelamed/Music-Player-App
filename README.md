@@ -1,4 +1,4 @@
-# Music_Player_App
+# Music Player App
 
 A modern, simple desktop music player built with Python, PyQt6, and VLC  
 Play your local MP3 files with a responsive interface, Hebrew support, search, shuffle, repeat, favorites, playlists, and keyboard shortcuts.
