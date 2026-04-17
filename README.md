@@ -243,10 +243,6 @@ To create a desktop shortcut (icon) that launches the app:
 
 ## License
 
-This project is for personal use only.
+This project is licensed under the MIT License.
 
----
-
-## Contributing
-
-Ideas, suggestions, and pull requests are welcome!
+See [LICENSE](LICENSE) for details.
